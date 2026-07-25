@@ -37,9 +37,9 @@ dev = [
 map-advisor = "map_advisor.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/cameronfox/map-advisor"
-Repository = "https://github.com/cameronfox/map-advisor"
-"Bug Tracker" = "https://github.com/cameronfox/map-advisor/issues"
+Homepage = "https://github.com/hermes-the-chat-bot/map-advisor"
+Repository = "https://github.com/hermes-the-chat-bot/map-advisor"
+"Bug Tracker" = "https://github.com/hermes-the-chat-bot/map-advisor/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
