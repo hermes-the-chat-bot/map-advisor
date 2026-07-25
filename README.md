@@ -14,7 +14,7 @@ covered by pytest with zero API keys required.
 
 `map-advisor` is a stripped-down, public version of the patterns Cameron Fox
 built while shipping an internal **multi-agent performance advisor
-workbench** at a prior employer — a system that orchestrates specialists
+workbench** — a system that orchestrates specialists
 (capacity, cost, reliability) and answers engineering questions under a
 strict set of safety policies. The internal system is closed-source; this
 repo is an **open, runnable reference** for those patterns, with pluggable
