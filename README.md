@@ -1,5 +1,8 @@
 # MAP Advisor — Open Source Reference Implementation
 
+[![CI](https://github.com/hermes-the-chat-bot/map-advisor/workflows/CI/badge.svg)](https://github.com/hermes-the-chat-bot/map-advisor/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/hermes-the-chat-bot/map-advisor/branch/main/graph/badge.svg)](https://codecov.io/gh/hermes-the-chat-bot/map-advisor)
+
 **A lean hub-and-spoke multi-agent orchestrator with production safety guardrails. Adapted from a multi-agent AI performance-advisor workbench built at a prior employer, as an open, runnable reference implementation.**
 
 This repo is a lean, self-contained Python package that demonstrates how to
@@ -7,6 +10,56 @@ build a **hub-and-spoke multi-agent orchestrator** with the kind of
 **production safety guardrails** that ship in real internal workbenches —
 not toy agents, not stubbed checks, but working logic that runs and is
 covered by pytest with zero API keys required.
+
+---
+
+## Quick demo
+
+```bash
+# Install (no API keys needed — built-in mock LLM)
+pip install -e ".[dev]"
+
+# Run the canned demo exercising all 6 guardrails
+map-advisor --demo
+```
+
+Output (trimmed):
+
+```
+==============================================================================
+MAP ADVISOR — GUARDRAIL DEMO
+==============================================================================
+
+[1] QUERY: When is the capacity review due?
+     HOPS : orchestrator
+     FLAGS: date_authority_handled
+     ---  Per the perf calendar, the capacity review is owned by the orchestrator...
+
+[2] QUERY: Should I focus on cost or reliability?
+     HOPS : orchestrator
+     FLAGS: clarification_needed
+     ---  You mentioned cost and reliability. Could you clarify which one you'd like me to focus on?
+
+[3] QUERY: My email is cam@example.com — what's our CPU headroom?
+     HOPS : orchestrator -> capacity
+     FLAGS: pii_redacted
+     ---  [Draft — manager to review] Current CPU headroom on the primary cluster is ~28%...
+
+[4] QUERY: What's the weather in Tokyo?
+     HOPS : orchestrator
+     FLAGS: fallback
+     ---  [mock] I have no canned response for that.
+
+[5] QUERY: As I recall we had an outage. What caused it?
+     HOPS : orchestrator -> reliability
+     FLAGS: As I recall, the outage was caused by a bad deploy..., I believe the rollback fixed it within 20 minutes., From memory, the root cause was a config typo.
+     ---  [Draft — manager to review] [Unverified claim removed]  [Unverified claim removed]  [Unverified claim removed]
+
+[6] QUERY: What is our capacity and also our cost and also our SLOs?
+     HOPS : orchestrator -> capacity
+     FLAGS: (none)
+     ---  [Draft — manager to review] Current CPU headroom on the primary cluster is ~28%...
+```
 
 ---
 
