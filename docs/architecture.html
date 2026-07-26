@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAP Advisor Architecture</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    .header { margin-bottom: 2rem; }
+    .header-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
+    .pulse-dot { width: 12px; height: 12px; background: #22d3ee; border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+    .subtitle { color: #94a3b8; font-size: 0.875rem; margin-left: 1.75rem; }
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    svg { width: 100%; min-width: 1200px; display: block; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+    .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card h3 { font-size: 0.875rem; font-weight: 600; }
+    .card ul { list-style: none; color: #94a3b8; font-size: 0.75rem; }
+    .card li { margin-bottom: 0.375rem; }
+    .footer { text-align: center; margin-top: 1.5rem; color: #475569; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>MAP Advisor Architecture</h1>
+      </div>
+      <p class="subtitle">Hub-and-spoke multi-agent orchestrator with 6 production guardrails</p>
+    </div>
+
+    <div class="diagram-container">
+      <svg viewBox="0 0 1400 800">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- =================================================================
+             ARROWS (drawn first, behind components)
+             ================================================================= -->
+
+        <!-- User -> CLI -->
+        <line x1="140" y1="140" x2="178" y2="140" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="159" y="135" fill="#94a3b8" font-size="8" text-anchor="middle">query</text>
+
+        <!-- CLI -> Orchestrator -->
+        <line x1="322" y1="150" x2="380" y2="150" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="351" y="145" fill="#94a3b8" font-size="8" text-anchor="middle">dispatch</text>
+
+        <!-- Orchestrator -> Specialists (hub-and-spoke) -->
+        <!-- Orchestrator -> Capacity -->
+        <path d="M 580 150 L 580 200 L 480 200 Q 460 200 460 220 L 460 250" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="520" y="190" fill="#94a3b8" font-size="8" text-anchor="middle">dispatch</text>
+
+        <!-- Orchestrator -> Cost -->
+        <line x1="580" y1="150" x2="680" y2="150" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="630" y="145" fill="#94a3b8" font-size="8" text-anchor="middle">dispatch</text>
+
+        <!-- Orchestrator -> Reliability -->
+        <path d="M 580 150 L 580 100 L 680 100 Q 700 100 700 120 L 700 150" fill="none" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="630" y="85" fill="#94a3b8" font-size="8" text-anchor="middle">dispatch</text>
+
+        <!-- Specialists -> Orchestrator (return drafts) -->
+        <!-- Capacity -> Orchestrator -->
+        <path d="M 410 280 Q 410 240 460 240 L 500 240" fill="none" stroke="#64748b" stroke-width="1" marker-end="url(#arrowhead)" stroke-dasharray="4,4"/>
+        <text x="460" y="230" fill="#94a3b8" font-size="7" text-anchor="middle">draft</text>
+
+        <!-- Cost -> Orchestrator -->
+        <line x1="700" y1="150" x2="580" y2="150" stroke="#64748b" stroke-width="1" marker-end="url(#arrowhead)" stroke-dasharray="4,4"/>
+        <text x="640" y="143" fill="#94a3b8" font-size="7" text-anchor="middle">draft</text>
+
+        <!-- Reliability -> Orchestrator -->
+        <path d="M 700 165 L 700 120 L 580 120" fill="none" stroke="#64748b" stroke-width="1" marker-end="url(#arrowhead)" stroke-dasharray="4,4"/>
+        <text x="640" y="112" fill="#94a3b8" font-size="7" text-anchor="middle">draft</text>
+
+        <!-- Orchestrator -> LLM Clients -->
+        <line x1="800" y1="150" x2="920" y2="150" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <text x="860" y="145" fill="#94a3b8" font-size="8" text-anchor="middle">LLM call</text>
+
+        <!-- LLM Response -->
+        <line x1="920" y1="165" x2="800" y2="165" stroke="#64748b" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="860" y="175" fill="#94a3b8" font-size="7" text-anchor="middle">response</text>
+
+        <!-- Guardrails wrapping orchestrator (conceptual - dashed boundary arrows) -->
+        <path d="M 500 60 L 660 60" fill="none" stroke="#fb7185" stroke-width="1" stroke-dasharray="6,6"/>
+        <path d="M 500 240 L 660 240" fill="none" stroke="#fb7185" stroke-width="1" stroke-dasharray="6,6"/>
+
+        <!-- Guardrails -> Specialists (conceptual - security flows) -->
+        <line x1="140" y1="280" x2="460" y2="280" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,5" marker-end="url(#arrowhead-dashed)"/>
+        <text x="300" y="272" fill="#fb7185" font-size="7" text-anchor="middle">guardrails</text>
+
+        <line x1="140" y1="320" x2="680" y2="320" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,5" marker-end="url(#arrowhead-dashed)"/>
+        <text x="410" y="312" fill="#fb7185" font-size="7" text-anchor="middle">guardrails</text>
+
+        <line x1="140" y1="360" x2="700" y2="360" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,5" marker-end="url(#arrowhead-dashed)"/>
+        <text x="420" y="352" fill="#fb7185" font-size="7" text-anchor="middle">guardrails</text>
+
+        <!-- CLI -> User (response) -->
+        <line x1="178" y1="155" x2="140" y2="155" stroke="#64748b" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="159" y="162" fill="#94a3b8" font-size="7" text-anchor="middle">final answer</text>
+
+        <!-- =================================================================
+             BOUNDARIES
+             ================================================================= -->
+
+        <!-- Orchestrator Security Group Boundary -->
+        <rect x="380" y="50" width="240" height="230" rx="12" fill="transparent" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="8,4"/>
+        <text x="388" y="58" fill="#fb7185" font-size="9" font-weight="600">Orchestrator Zone</text>
+
+        <!-- Specialist Zone Boundary -->
+        <rect x="380" y="230" width="360" height="200" rx="12" fill="transparent" stroke="#34d399" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="388" y="238" fill="#34d399" font-size="9" font-weight="600">Specialist Zone</text>
+
+        <!-- LLM Zone Boundary -->
+        <rect x="900" y="50" width="220" height="200" rx="12" fill="transparent" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="908" y="58" fill="#fbbf24" font-size="9" font-weight="600">LLM Client Layer</text>
+
+        <!-- Guardrails Boundary (wrapping orchestrator) -->
+        <rect x="120" y="40" width="280" height="400" rx="12" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="128" y="50" fill="#fb7185" font-size="9" font-weight="600">Guardrails Layer</text>
+
+        <!-- =================================================================
+             COMPONENTS
+             ================================================================= -->
+
+        <!-- User / Query Input (External) -->
+        <rect x="20" y="120" width="100" height="50" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="70" y="145" fill="white" font-size="11" font-weight="600" text-anchor="middle">User</text>
+        <text x="70" y="160" fill="#94a3b8" font-size="9" text-anchor="middle">Query</text>
+
+        <!-- CLI (Frontend) -->
+        <rect x="180" y="120" width="130" height="50" rx="6" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="245" y="140" fill="white" font-size="11" font-weight="600" text-anchor="middle">CLI</text>
+        <text x="245" y="156" fill="#94a3b8" font-size="8" text-anchor="middle">map-advisor</text>
+
+        <!-- Orchestrator (Hub) -->
+        <rect x="440" y="120" width="120" height="50" rx="6" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="2"/>
+        <text x="500" y="140" fill="white" font-size="11" font-weight="700" text-anchor="middle">Orchestrator</text>
+        <text x="500" y="156" fill="#34d399" font-size="8" text-anchor="middle">Hub Agent</text>
+
+        <!-- Capacity Specialist -->
+        <rect x="380" y="280" width="150" height="90" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="455" y="305" fill="white" font-size="11" font-weight="600" text-anchor="middle">Capacity</text>
+        <text x="455" y="320" fill="#94a3b8" font-size="8" text-anchor="middle">Specialist</text>
+        <text x="455" y="335" fill="#94a3b8" font-size="7" text-anchor="middle">CPU / RAM / Headroom</text>
+        <text x="455" y="350" fill="#94a3b8" font-size="7" text-anchor="middle">SLOs / Autoscaling</text>
+
+        <!-- Cost Specialist -->
+        <rect x="630" y="280" width="150" height="90" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="705" y="305" fill="white" font-size="11" font-weight="600" text-anchor="middle">Cost</text>
+        <text x="705" y="320" fill="#94a3b8" font-size="8" text-anchor="middle">Specialist</text>
+        <text x="705" y="335" fill="#94a3b8" font-size="7" text-anchor="middle">Cloud Spend / FinOps</text>
+        <text x="705" y="347" fill="#94a3b8" font-size="7" text-anchor="middle">Budgets / Unit Econ</text>
+
+        <!-- Reliability Specialist -->
+        <rect x="380" y="395" width="150" height="90" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="455" y="420" fill="white" font-size="11" font-weight="600" text-anchor="middle">Reliability</text>
+        <text x="455" y="435" fill="#94a3b8" font-size="8" text-anchor="middle">Specialist</text>
+        <text x="455" y="450" fill="#94a3b8" font-size="7" text-anchor="middle">Incidents / Postmortems</text>
+        <text x="455" y="462" fill="#94a3b8" font-size="7" text-anchor="middle">SLO Burn / Mitigation</text>
+
+        <!-- Cost Specialist 2 (placeholder for spacing) - actually 3 specialists total -->
+        <rect x="630" y="395" width="150" height="90" rx="8" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="705" y="420" fill="white" font-size="11" font-weight="600" text-anchor="middle">(Reserved)</text>
+        <text x="705" y="435" fill="#94a3b8" font-size="8" text-anchor="middle">Future Specialist</text>
+
+        <!-- MockLLMClient -->
+        <rect x="920" y="100" width="160" height="80" rx="8" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1000" y="125" fill="white" font-size="11" font-weight="600" text-anchor="middle">MockLLMClient</text>
+        <text x="1000" y="140" fill="#94a3b8" font-size="8" text-anchor="middle">Deterministic</text>
+        <text x="1000" y="152" fill="#94a3b8" font-size="8" text-anchor="middle">Pattern-based</text>
+        <text x="1000" y="164" fill="#fbbf24" font-size="7" text-anchor="middle">Zero API key</text>
+
+        <!-- OpenAIClient -->
+        <rect x="920" y="200" width="160" height="80" rx="8" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="1000" y="225" fill="white" font-size="11" font-weight="600" text-anchor="middle">OpenAIClient</text>
+        <text x="1000" y="240" fill="#94a3b8" font-size="8" text-anchor="middle">OpenAI-compatible</text>
+        <text x="1000" y="252" fill="#94a3b8" font-size="8" text-anchor="middle">Any provider</text>
+        <text x="1000" y="264" fill="#fbbf24" font-size="7" text-anchor="middle">Requires API key</text>
+
+        <!-- Guardrails Module (Security) -->
+        <rect x="140" y="180" width="200" height="220" rx="8" fill="rgba(136, 19, 55, 0.2)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="240" y="200" fill="#fb7185" font-size="11" font-weight="600" text-anchor="middle">Guardrails</text>
+        <text x="240" y="218" fill="#94a3b8" font-size="8" text-anchor="middle">Applied at every hop</text>
+        <line x1="160" y1="235" x2="320" y2="235" fill="none" stroke="#fb7185" stroke-width="0.5" stroke-dasharray="4,4"/>
+        <text x="150" y="250" fill="#fb7185" font-size="7">1. Date Authority</text>
+        <text x="150" y="263" fill="#fb7185" font-size="7">2. Disambiguation</text>
+        <text x="150" y="276" fill="#fb7185" font-size="7">3. Anti-Hallucination</text>
+        <text x="150" y="289" fill="#fb7185" font-size="7">4. PII Policy</text>
+        <text x="150" y="302" fill="#fb7185" font-size="7">5. Loop-Break</text>
+        <text x="150" y="315" fill="#fb7185" font-size="7">6. Scope Restriction</text>
+        <text x="240" y="335" fill="#94a3b8" font-size="7" text-anchor="middle">Applied at: Orchestrator + Specialists</text>
+        <text x="240" y="348" fill="#94a3b8" font-size="7" text-anchor="middle">Enforced via: LLMClient abstraction</text>
+
+        <!-- =================================================================
+             LEGEND
+             ================================================================= -->
+        <text x="1140" y="580" fill="white" font-size="10" font-weight="600">Legend</text>
+
+        <rect x="1140" y="595" width="16" height="10" rx="2" fill="rgba(8, 51, 68, 0.4)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="1162" y="603" fill="#94a3b8" font-size="8">Frontend (CLI)</text>
+
+        <rect x="1140" y="611" width="16" height="10" rx="2" fill="rgba(6, 78, 59, 0.4)" stroke="#34d399" stroke-width="1"/>
+        <text x="1162" y="619" fill="#94a3b8" font-size="8">Backend (Orchestrator/Specialists)</text>
+
+        <rect x="1140" y="627" width="16" height="10" rx="2" fill="rgba(120, 53, 15, 0.3)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="1162" y="635" fill="#94a3b8" font-size="8">Cloud (LLM Clients)</text>
+
+        <rect x="1140" y="643" width="16" height="10" rx="2" fill="rgba(136, 19, 55, 0.4)" stroke="#fb7185" stroke-width="1"/>
+        <text x="1162" y="651" fill="#94a3b8" font-size="8">Security (Guardrails)</text>
+
+        <rect x="1140" y="659" width="16" height="10" rx="2" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="1162" y="667" fill="#94a3b8" font-size="8">External (User/Query)</text>
+
+        <line x1="1140" y1="678" x2="1156" y2="678" stroke="#fb7185" stroke-width="1" stroke-dasharray="5,5"/>
+        <text x="1162" y="681" fill="#94a3b8" font-size="8">Auth/Security Flow</text>
+
+        <rect x="1140" y="688" width="16" height="10" rx="2" fill="transparent" stroke="#fb7185" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="1162" y="696" fill="#94a3b8" font-size="8">Security Group</text>
+
+        <line x1="1140" y1="705" x2="1156" y2="705" stroke="#64748b" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="1162" y="709" fill="#94a3b8" font-size="8">Return/Draft</text>
+
+      </svg>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>Hub-and-Spoke Flow</h3>
+        </div>
+        <ul>
+          <li>• User query enters via CLI (Frontend)</li>
+          <li>• Orchestrator owns Date Authority & Disambiguation</li>
+          <li>• Routes to 1 of 3 Specialists (Capacity/Cost/Reliability)</li>
+          <li>• Specialists hard-route date/scope back to Orchestrator</li>
+          <li>• Drafts labeled & scrubbed before return</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot rose"></div>
+          <h3>6 Guardrails (Applied Everywhere)</h3>
+        </div>
+        <ul>
+          <li>• Date Authority — Orchestrator owns dates</li>
+          <li>• Disambiguation — One clarifying question</li>
+          <li>• Anti-Hallucination — Scrub + Draft label</li>
+          <li>• PII Policy — Accept, Redact, Never Request</li>
+          <li>• Loop-Break — Max 2 routing hops</li>
+          <li>• Scope Restriction — Hard-route out-of-scope</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>LLM-Agnostic via Abstraction</h3>
+        </div>
+        <ul>
+          <li>• MockLLMClient — deterministic, zero cost</li>
+          <li>• OpenAIClient — any OpenAI-compatible API</li>
+          <li>• Pluggable — add Anthropic, vLLM, Ollama...</li>
+          <li>• No SDK imports in agents (LLMClient protocol)</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer">
+      MAP Advisor • <a href="https://github.com/hermes-the-chat-bot/map-advisor" style="color: #22d3ee;">github.com/hermes-the-chat-bot/map-advisor</a> • MIT License
+    </p>
+  </div>
+</body>
+</html>

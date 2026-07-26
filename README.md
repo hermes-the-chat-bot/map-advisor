@@ -103,41 +103,12 @@ which tests cover it.
 
 ## Architecture
 
-```
-                         ┌────────────────────────────────┐
-                         │           Orchestrator         │
-                         │  (hub — owns date authority,   │
-                         │   disambiguation, loop-break)  │
-                         └───────┬───────────┬────────────┘
-                                 │ dispatch  │
-                ┌────────────────┼───────────┼────────────┐
-                ▼                ▼           ▼            ▼
-        ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-        │ Capacity     │ │ Cost         │ │ Reliability  │  (spokes)
-        │ Specialist   │ │ Specialist   │ │ Specialist   │
-        └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-               │                │                │
-               └─────── every specialist respects ────────┐
-                       • Date Authority (route back)      │
-                       • Scope Restriction (route back)   │
-                       • Draft Labeling (always tagged)   │
-                       • Anti-hallucination (scrubbed)    │
-                       • PII Policy (never echo/ask)      │
-                       └──────────────────────────────────┘
-
-  LLM Client Abstraction
-  ┌──────────────┐         ┌────────────────┐
-  │ MockLLMClient│◀─default│ OpenAIClient   │  (optional)
-  │ (no key)     │         │ (any OpenAI    │
-  └──────────────┘         │  compat API)   │
-                           └────────────────┘
-```
-
-Mermaid version (paste into any Mermaid renderer):
+![MAP Advisor Architecture](docs/architecture.svg)
 
 ```mermaid
 flowchart TD
-    U[User query] --> O[Orchestrator<br/>date authority · disambiguation · loop-break]
+    U[User query] --> CLI[CLI<br/>map-advisor]
+    CLI --> O[Orchestrator<br/>date authority · disambiguation · loop-break]
     O -->|route| SC[Capacity Specialist]
     O -->|route| SO[Cost Specialist]
     O -->|route| SR[Reliability Specialist]
@@ -162,6 +133,8 @@ flowchart TD
     Guardrails -. enforced in .- SO
     Guardrails -. enforced in .- SR
 ```
+
+For a detailed architecture diagram with component details, guardrail boundaries, and data flows, see [docs/architecture.svg](docs/architecture.svg).
 
 ---
 
@@ -245,6 +218,73 @@ map-advisor/
     ├── test_llm.py                  (LLM abstraction + factory)
     └── test_orchestrator.py         (routing + end-to-end guardrails)
 ```
+
+---
+
+## Architecture
+
+```
+                         ┌────────────────────────────────┐
+                         │           Orchestrator         │
+                         │  (hub — owns date authority,   │
+                         │   disambiguation, loop-break)  │
+                         └───────┬───────────┬────────────┘
+                                 │ dispatch  │
+                ┌────────────────┼───────────┼────────────┐
+                ▼                ▼           ▼            ▼
+        ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+        │ Capacity     │ │ Cost         │ │ Reliability  │  (spokes)
+        │ Specialist   │ │ Specialist   │ │ Specialist   │
+        └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
+               │                │                │
+               └─────── every specialist respects ────────┐
+                       • Date Authority (route back)      │
+                       • Scope Restriction (route back)   │
+                       • Draft Labeling (always tagged)   │
+                       • Anti-hallucination (scrubbed)    │
+                       • PII Policy (never echo/ask)      │
+                       └──────────────────────────────────┘
+
+  LLM Client Abstraction
+  ┌──────────────┐         ┌────────────────┐
+  │ MockLLMClient│◀─default│ OpenAIClient   │  (optional)
+  │ (no key)     │         │ (any OpenAI    │
+  └──────────────┘         │  compat API)   │
+                           └────────────────┘
+```
+
+Mermaid version (paste into any Mermaid renderer):
+
+```mermaid
+flowchart TD
+    U[User query] --> CLI[CLI (map-advisor)]
+    CLI --> O[Orchestrator<br/>date authority · disambiguation · loop-break]
+    O -->|route| SC[Capacity Specialist]
+    O -->|route| SO[Cost Specialist]
+    O -->|route| SR[Reliability Specialist]
+    SC -.->|hard-route back<br/>date/scope| O
+    SO -.->|hard-route back<br/>date/scope| O
+    SR -.->|hard-route back<br/>date/scope| O
+    SC -->|labeled draft| O
+    O --> F[Final answer]
+    O --> LLM[LLM Client Abstraction]
+    LLM --> Mock[MockLLMClient<br/>no API key]
+    LLM --> OpenAI[OpenAIClient<br/>optional]
+    subgraph Guardrails
+      G1[Date Authority]
+      G2[Disambiguation]
+      G3[Draft Labeling]
+      G4[PII Policy]
+      G5[Loop-Break]
+      G6[Scope Restriction]
+    end
+    Guardrails -. enforced in .- O
+    Guardrails -. enforced in .- SC
+    Guardrails -. enforced in .- SO
+    Guardrails -. enforced in .- SR
+```
+
+**Interactive diagram:** [View full SVG diagram](docs/architecture.svg) — opens in browser with pan/zoom, legend, and component details.
 
 ---
 
