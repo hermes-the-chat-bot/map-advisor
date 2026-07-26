@@ -19,6 +19,7 @@ from map_advisor.llm import MockLLMClient
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_orchestrator(*, responses=None, patterns=None, max_hops=2) -> Orchestrator:
     llm = MockLLMClient(responses=responses, patterns=patterns)
     return Orchestrator(
@@ -35,6 +36,7 @@ def make_orchestrator(*, responses=None, patterns=None, max_hops=2) -> Orchestra
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
+
 
 def test_empty_specialists_raises() -> None:
     with pytest.raises(RoutingError):
@@ -58,6 +60,7 @@ def test_empty_query_returns_prompt() -> None:
 # ---------------------------------------------------------------------------
 # Date Authority Rule (end-to-end)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.guardrail
 class TestDateAuthorityE2E:
@@ -87,6 +90,7 @@ class TestDateAuthorityE2E:
 # Disambiguation Protocol (end-to-end)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestDisambiguationE2E:
     def test_ambiguity_returns_single_clarifying_question(self) -> None:
@@ -112,6 +116,7 @@ class TestDisambiguationE2E:
 # Anti-hallucination / Draft Labeling (end-to-end)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestDraftLabelingE2E:
     def test_specialist_draft_is_labeled(self) -> None:
@@ -135,6 +140,7 @@ class TestDraftLabelingE2E:
 # PII Policy (end-to-end)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestPIIPolicyE2E:
     def test_pii_in_query_is_redacted_before_routing(self) -> None:
@@ -146,8 +152,7 @@ class TestPIIPolicyE2E:
         # And the specialist saw the redacted version.
         # (call_log captured during generate())
         specialist_calls = [
-            log for log in orch.llm.call_log
-            if log["meta"].get("scope") == "capacity"
+            log for log in orch.llm.call_log if log["meta"].get("scope") == "capacity"
         ]
         assert specialist_calls, "capacity specialist LLM call recorded"
         sent_content = specialist_calls[0]["messages"][0]["content"]
@@ -166,6 +171,7 @@ class TestPIIPolicyE2E:
 # ---------------------------------------------------------------------------
 # Loop-Break Protocol (end-to-end)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.guardrail
 class TestLoopBreakE2E:
@@ -205,6 +211,7 @@ class TestLoopBreakE2E:
 # Scope Restriction (end-to-end)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestScopeRestrictionE2E:
     def test_in_scope_routes_to_specialist(self) -> None:
@@ -238,12 +245,17 @@ class TestScopeRestrictionE2E:
         r = spec.handle("When is the capacity review due?")
         assert r.route_to == "orchestrator"
         # Capacity scope mentions SLO — date wins, but capacity content emerges
-        assert "date" in r.text.lower() or "timeline" in r.text.lower() or "date authority" in r.text.lower()
+        assert (
+            "date" in r.text.lower()
+            or "timeline" in r.text.lower()
+            or "date authority" in r.text.lower()
+        )
 
 
 # ---------------------------------------------------------------------------
 # Routing logic — keyword overlap picks the right specialist
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.routing
 class TestRoutingSelection:

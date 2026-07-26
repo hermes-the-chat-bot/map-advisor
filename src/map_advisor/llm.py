@@ -41,6 +41,7 @@ __all__ = [
 # Data structures
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class LLMResponse:
     """A normalized response from any LLM backend.
@@ -63,6 +64,7 @@ class LLMResponse:
 # Base contract
 # ---------------------------------------------------------------------------
 
+
 class LLMClient:
     """Abstract base. Subclasses implement :meth:`generate`."""
 
@@ -82,6 +84,7 @@ class LLMClient:
 # ---------------------------------------------------------------------------
 # Mock client — the workhorse for tests and offline demos
 # ---------------------------------------------------------------------------
+
 
 class MockLLMClient(LLMClient):
     """A deterministic stub LLM.
@@ -108,13 +111,17 @@ class MockLLMClient(LLMClient):
     ) -> None:
         self._scripted: list[str] = list(responses) if responses else []
         self._patterns: dict[str, str] = dict(patterns or {})
-        self._callbacks: list[Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]] = []
+        self._callbacks: list[
+            Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]
+        ] = []
         self._default = default or "[mock] I have no canned response for that."
         self._call_log: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ API
 
-    def respond_with(self, fn: Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]) -> None:
+    def respond_with(
+        self, fn: Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]
+    ) -> None:
         """Register a callback consulted before patterns/scripted responses."""
         self._callbacks.append(fn)
 
@@ -134,12 +141,14 @@ class MockLLMClient(LLMClient):
         metadata: Mapping[str, Any] | None = None,
     ) -> LLMResponse:
         meta = dict(metadata or {})
-        meta.update({
-            "system_prompt": system_prompt,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stop": list(stop) if stop else None,
-        })
+        meta.update(
+            {
+                "system_prompt": system_prompt,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+                "stop": list(stop) if stop else None,
+            }
+        )
         self._call_log.append({"messages": list(messages), "meta": meta})
 
         # 1) Registered callbacks, first-come-first-served.
@@ -183,6 +192,7 @@ class MockLLMClient(LLMClient):
 # OpenAI-compatible client (optional dependency)
 # ---------------------------------------------------------------------------
 
+
 class OpenAIClient(LLMClient):
     """Thin adapter over the ``openai`` Python SDK.
 
@@ -219,7 +229,9 @@ class OpenAIClient(LLMClient):
     ) -> LLMResponse:
         try:
             from openai import OpenAI  # type: ignore
-        except ImportError as exc:  # pragma: no cover - exercised only with openai absent
+        except (
+            ImportError
+        ) as exc:  # pragma: no cover - exercised only with openai absent
             raise ImportError(
                 "OpenAIClient requires the 'openai' package. "
                 "Install it with: pip install 'map-advisor[openai]'"
@@ -229,7 +241,9 @@ class OpenAIClient(LLMClient):
         full_messages: list[dict[str, str]] = []
         if system_prompt:
             full_messages.append({"role": "system", "content": system_prompt})
-        full_messages.extend({"role": m["role"], "content": m["content"]} for m in messages)
+        full_messages.extend(
+            {"role": m["role"], "content": m["content"]} for m in messages
+        )
 
         kwargs: dict[str, Any] = {
             "model": self.model,
@@ -249,6 +263,7 @@ class OpenAIClient(LLMClient):
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
 
 def make_client(kind: str = "mock", **kwargs: Any) -> LLMClient:
     """Select a backend by name.

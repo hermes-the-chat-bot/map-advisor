@@ -41,7 +41,10 @@ class TestMockLLMClient:
             return None
 
         c.respond_with(cb)
-        assert c.generate([{"role": "user", "content": "special please"}]).text == "from callback"
+        assert (
+            c.generate([{"role": "user", "content": "special please"}]).text
+            == "from callback"
+        )
         # Non-special still hits scripted.
         assert c.generate([{"role": "user", "content": "other"}]).text == "r"
 
@@ -72,6 +75,7 @@ class TestLLMBaseContract:
     def test_openai_client_lazy_import_error(self, monkeypatch) -> None:
         # Force ImportError of 'openai' inside generate().
         import builtins
+
         real_import = builtins.__import__
 
         def fake_import(name, *a, **k):

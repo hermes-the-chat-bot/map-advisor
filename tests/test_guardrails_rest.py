@@ -23,6 +23,7 @@ from map_advisor.guardrails import (
 # Disambiguation Protocol
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestDisambiguation:
     def test_branching_with_pair_triggers(self) -> None:
@@ -59,6 +60,7 @@ class TestDisambiguation:
 # ---------------------------------------------------------------------------
 # Anti-hallucination / Draft Labeling
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.guardrail
 class TestDraftLabeling:
@@ -105,6 +107,7 @@ class TestDraftLabeling:
 # ---------------------------------------------------------------------------
 # PII Policy
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.guardrail
 class TestPIIPolicy:
@@ -159,6 +162,7 @@ class TestPIIPolicy:
 # Loop-Break Protocol
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestLoopBreaker:
     def test_under_limit_ok(self) -> None:
@@ -196,6 +200,7 @@ class TestLoopBreaker:
 # ---------------------------------------------------------------------------
 # Scope Restriction
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.guardrail
 class TestScopeRestriction:

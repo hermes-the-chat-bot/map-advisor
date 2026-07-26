@@ -67,25 +67,54 @@ CAPACITY_SCOPE = Scope(
     name="capacity",
     description="CPU, memory, disk headroom, autoscaling, and SLO capacity planning.",
     keywords=(
-        "capacity", "cpu", "memory", "ram", "disk", "headroom", "autoscal",
-        "utilization", "saturation", "queue depth", "SLO", "saturation",
+        "capacity",
+        "cpu",
+        "memory",
+        "ram",
+        "disk",
+        "headroom",
+        "autoscal",
+        "utilization",
+        "saturation",
+        "queue depth",
+        "SLO",
+        "saturation",
     ),
 )
 COST_SCOPE = Scope(
     name="cost",
     description="Cloud spend, FinOps, commitment discounts, and unit economics.",
     keywords=(
-        "cost", "spend", "finops", "budget", "invoice", "commitment", "discount",
-        "savings plan", "reserved", "unit economics", "price",
+        "cost",
+        "spend",
+        "finops",
+        "budget",
+        "invoice",
+        "commitment",
+        "discount",
+        "savings plan",
+        "reserved",
+        "unit economics",
+        "price",
     ),
 )
 RELIABILITY_SCOPE = Scope(
     name="reliability",
     description="Incidents, SLO burn, error budgets, postmortems, and mitigation.",
     keywords=(
-        "reliability", "incident", "postmortem", "error budget", "SLO burn",
-        "outage", "degradation", "mitigation", "pager", "page", "rollback",
-        "alert", "sLO",
+        "reliability",
+        "incident",
+        "postmortem",
+        "error budget",
+        "SLO burn",
+        "outage",
+        "degradation",
+        "mitigation",
+        "pager",
+        "page",
+        "rollback",
+        "alert",
+        "sLO",
     ),
 )
 
@@ -93,6 +122,7 @@ RELIABILITY_SCOPE = Scope(
 # ---------------------------------------------------------------------------
 # Result object
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class AgentResult:
@@ -126,6 +156,7 @@ class AgentResult:
 # Specialist base
 # ---------------------------------------------------------------------------
 
+
 # Hint shown to a specialist when it decides a date question has reached it.
 def _back_to_hub_for_date(specialist_name: str) -> Callable[..., str]:
     def make_msg(*_a: Any, **_k: Any) -> str:
@@ -133,6 +164,7 @@ def _back_to_hub_for_date(specialist_name: str) -> Callable[..., str]:
             f"[{specialist_name}→Orchestrator] Date/timeline question received. "
             "Routing back per the Date Authority Rule."
         )
+
     return make_msg
 
 
@@ -249,6 +281,7 @@ class ReliabilitySpecialist(Specialist):
 # Orchestrator
 # ---------------------------------------------------------------------------
 
+
 class Orchestrator:
     """The hub agent.
 
@@ -285,7 +318,9 @@ class Orchestrator:
             "Never invent evidence. Never request or echo PII."
         )
         # Specialists indexed by scope name for routing back.
-        self._by_name: dict[str, Specialist] = {s.scope.name: s for s in self.specialists}
+        self._by_name: dict[str, Specialist] = {
+            s.scope.name: s for s in self.specialists
+        }
 
     # ------------------------------------------------------------------
     def _route_specialist(self, query: str) -> Specialist | None:
@@ -325,7 +360,8 @@ class Orchestrator:
                 role="orchestrator",
                 text=text,
                 hops=hops,
-                flags=["date_authority_handled"] + (["pii_redacted"] if pii_was_redacted else []),
+                flags=["date_authority_handled"]
+                + (["pii_redacted"] if pii_was_redacted else []),
                 final=True,
             )
 
@@ -337,7 +373,8 @@ class Orchestrator:
                 role="orchestrator",
                 text=suggested,
                 hops=hops,
-                flags=["clarification_needed"] + (["pii_redacted"] if pii_was_redacted else []),
+                flags=["clarification_needed"]
+                + (["pii_redacted"] if pii_was_redacted else []),
                 final=False,  # waits for input
             )
 
@@ -386,7 +423,7 @@ class Orchestrator:
                 agent="orchestrator",
                 role="orchestrator",
                 text=wrapped,
-                hops=hops + result.hops[len(hops):],
+                hops=hops + result.hops[len(hops) :],
                 flags=result.flags + (["pii_redacted"] if pii_was_redacted else []),
                 final=True,
             )
@@ -431,7 +468,7 @@ class Orchestrator:
                     agent="orchestrator",
                     role="orchestrator",
                     text=text,
-                    hops=hops + attempts[len(hops):],
+                    hops=hops + attempts[len(hops) :],
                     flags=["no_specialist_match"],
                     final=True,
                 )
@@ -441,7 +478,9 @@ class Orchestrator:
 
         return result
 
-    def _next_specialist(self, query: str, *, exclude: Sequence[str]) -> Specialist | None:
+    def _next_specialist(
+        self, query: str, *, exclude: Sequence[str]
+    ) -> Specialist | None:
         best: Specialist | None = None
         best_score = 0
         for spec in self.specialists:
@@ -454,11 +493,14 @@ class Orchestrator:
         return best
 
     # ------------------------------------------------------------------
-    def _answer_date_question(self, query: str, breaker: LoopBreaker, hops: list[str]) -> str:
+    def _answer_date_question(
+        self, query: str, breaker: LoopBreaker, hops: list[str]
+    ) -> str:
         """The orchestrator answers timeline questions authoritatively."""
         response = self.llm.generate(
             [{"role": "user", "content": query}],
-            system_prompt=self.system_prompt + " The orchestrator owns date/timeline authority.",
+            system_prompt=self.system_prompt
+            + " The orchestrator owns date/timeline authority.",
             metadata={"role": "orchestrator-date-authority"},
         )
         text = response.text
@@ -471,15 +513,13 @@ class Orchestrator:
         """Wrap the specialist draft with the orchestrator's review note."""
         # Light-touch synthesis — we surface the labeled draft with a small
         # orchestrator pre-amble, never removing the Draft label.
-        return (
-            "Per the orchestrator's review of a specialist draft:\n"
-            f"{draft.text}"
-        )
+        return f"Per the orchestrator's review of a specialist draft:\n{draft.text}"
 
 
 # ---------------------------------------------------------------------------
 # Convenience constructor used by tests and the CLI.
 # ---------------------------------------------------------------------------
+
 
 def default_orchestrator(llm: LLMClient | None = None) -> Orchestrator:
     """Build an orchestrator wired with all three default specialists."""

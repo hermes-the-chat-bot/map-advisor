@@ -12,6 +12,7 @@ from map_advisor.guardrails import (
 # Date Authority Rule
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.guardrail
 class TestDateAuthority:
     @pytest.mark.parametrize(

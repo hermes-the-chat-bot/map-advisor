@@ -102,7 +102,9 @@ def test_version_flag() -> None:
     assert exc.value.code == 0
 
 
-def test_openai_backend_argparses_but_fails_cleanly_without_imports(monkeypatch) -> None:
+def test_openai_backend_argparses_but_fails_cleanly_without_imports(
+    monkeypatch,
+) -> None:
     """The openai backend flag is accepted; the lazy import inside generate
     raises a friendly ImportError when actually called."""
     import argparse

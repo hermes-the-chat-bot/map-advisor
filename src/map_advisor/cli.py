@@ -32,12 +32,12 @@ __all__ = ["build_parser", "main", "run_demo", "run_query"]
 # ---------------------------------------------------------------------------
 
 DEMO_QUERIES: list[str] = [
-    "When is the capacity review due?",                          # Date Authority
-    "Should I focus on cost or reliability?",                    # Disambiguation
-    "My email is cam@example.com — what's our CPU headroom?",       # PII Policy
-    "What's the weather in Tokyo?",                               # Scope Restriction (no-one's)
-    "As I recall we had an outage. What caused it?",             # Anti-hallucination
-    "What is our capacity and also our cost and also our SLOs?", # Loop potential
+    "When is the capacity review due?",  # Date Authority
+    "Should I focus on cost or reliability?",  # Disambiguation
+    "My email is cam@example.com — what's our CPU headroom?",  # PII Policy
+    "What's the weather in Tokyo?",  # Scope Restriction (no-one's)
+    "As I recall we had an outage. What caused it?",  # Anti-hallucination
+    "What is our capacity and also our cost and also our SLOs?",  # Loop potential
 ]
 
 
@@ -58,15 +58,20 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--model", default=None, help="Model id for the openai backend.")
     p.add_argument(
-        "--max-hops", type=int, default=2,
+        "--max-hops",
+        type=int,
+        default=2,
         help="Loop-break threshold (default: 2).",
     )
     p.add_argument(
-        "--demo", action="store_true",
+        "--demo",
+        action="store_true",
         help="Run a canned demo exercising each guardrail, then exit.",
     )
     p.add_argument(
-        "--verbose", "-v", action="store_true",
+        "--verbose",
+        "-v",
+        action="store_true",
         help="Print routing hops and audit flags.",
     )
     p.add_argument("--version", action="version", version=f"map-advisor {__version__}")
@@ -85,13 +90,11 @@ def _make_client(args: argparse.Namespace) -> LLMClient:
     # the specialist sometimes invents evidence — which the orchestrator
     # scrubs and labels. Demonstrates guardrail #3 in the demo.
     _invented_responses = {
-        r"recall":
-            "As I recall, the outage was caused by a bad deploy on Tuesday. "
-            "I believe the rollback fixed it within 20 minutes. "
-            "From memory, the root cause was a config typo.",
-        r"believe":
-            "I believe the cluster had a saturation event. "
-            "Off the top of my head, the cause was a noisy neighbor.",
+        r"recall": "As I recall, the outage was caused by a bad deploy on Tuesday. "
+        "I believe the rollback fixed it within 20 minutes. "
+        "From memory, the root cause was a config typo.",
+        r"believe": "I believe the cluster had a saturation event. "
+        "Off the top of my head, the cause was a noisy neighbor.",
     }
     _plausible_responses = {
         # Date authority answers (orchestrator owns these).
@@ -163,7 +166,9 @@ def run_demo(args: argparse.Namespace) -> str:
             f"\n     ---\n     {r.text}\n"
         )
     blocks.append("=" * 78)
-    blocks.append("All six guardrails exercised with the mock backend. No API keys used.")
+    blocks.append(
+        "All six guardrails exercised with the mock backend. No API keys used."
+    )
     return "\n".join(blocks)
 
 

@@ -41,30 +41,69 @@ __all__ = [
 
 _DATE_KEYWORDS: tuple[str, ...] = (
     # explicit timing words
-    "date", "dates", "when", "timeline", "milestone", "milestones",
-    "deadline", "deadlines", "schedule", "due", "release date",
-    "launch date", "ship date", "ship", "go-live", "ETA",
-    "Q1", "Q2", "Q3", "Q4",
+    "date",
+    "dates",
+    "when",
+    "timeline",
+    "milestone",
+    "milestones",
+    "deadline",
+    "deadlines",
+    "schedule",
+    "due",
+    "release date",
+    "launch date",
+    "ship date",
+    "ship",
+    "go-live",
+    "ETA",
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
     # common past-tense triggering
-    "what time", "how long ago", "shipped",
+    "what time",
+    "how long ago",
+    "shipped",
     # ISO-ish / month names are detected separately below
 )
 
 # Month names (used as anchors; full + abbrev)
 _MONTHS = (
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Sept", "Oct", "Nov", "Dec",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Sept",
+    "Oct",
+    "Nov",
+    "Dec",
 )
 
 # ISO date patterns — anchored to avoid matching stray digit groups.
 _ISO_PATTERNS = [
-    re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),                 # 2025-01-31
-    re.compile(r"\b\d{4}/\d{2}/\d{2}\b"),                # 2025/01/31
-    re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b"),           # 1/31/25
-    re.compile(r"\b\d{1,2}-\d{1,2}-\d{2,4}\b"),           # 1-31-25
-    re.compile(r"\b\d{1,2}\.\d{1,2}\.\d{2,4}\b"),        # 31.01.2025
+    re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),  # 2025-01-31
+    re.compile(r"\b\d{4}/\d{2}/\d{2}\b"),  # 2025/01/31
+    re.compile(r"\b\d{1,2}/\d{1,2}/\d{2,4}\b"),  # 1/31/25
+    re.compile(r"\b\d{1,2}-\d{1,2}-\d{2,4}\b"),  # 1-31-25
+    re.compile(r"\b\d{1,2}\.\d{1,2}\.\d{2,4}\b"),  # 31.01.2025
 ]
 
 
@@ -81,13 +120,30 @@ def is_date_question(text: str) -> bool:
 
     # Phrase-level questions that always imply asking *when*.
     DATE_PHRASES = (
-        "when will", "when does", "when did", "when is", "when are", "when was",
-        "when can we", "what is the date", "what's the date", "whats the date",
-        "what is the timeline", "what's the timeline", "whats the timeline",
-        "what is the deadline", "what's the deadline", "whats the deadline",
-        "what is the eta", "what's the eta", "whats the eta",
-        "when is it shipping", "when does it ship",
-        "expected ship date", "expected launch date", "go-live date",
+        "when will",
+        "when does",
+        "when did",
+        "when is",
+        "when are",
+        "when was",
+        "when can we",
+        "what is the date",
+        "what's the date",
+        "whats the date",
+        "what is the timeline",
+        "what's the timeline",
+        "whats the timeline",
+        "what is the deadline",
+        "what's the deadline",
+        "whats the deadline",
+        "what is the eta",
+        "what's the eta",
+        "whats the eta",
+        "when is it shipping",
+        "when does it ship",
+        "expected ship date",
+        "expected launch date",
+        "go-live date",
     )
     for phrase in DATE_PHRASES:
         if phrase in lc:
@@ -112,7 +168,9 @@ def is_date_question(text: str) -> bool:
             if re.search(r"\b(19|20)\d{2}\b", lc):
                 return True
             # Month + ordinal day ("Jan 31", "January 5th").
-            if re.search(rf"\b{re.escape(month.lower())}\s+\d{{1,2}}(st|nd|rd|th)?\b", lc):
+            if re.search(
+                rf"\b{re.escape(month.lower())}\s+\d{{1,2}}(st|nd|rd|th)?\b", lc
+            ):
                 return True
 
     # ISO-style date tokens.
@@ -177,7 +235,10 @@ def needs_clarification(text: str) -> tuple[bool, str | None]:
 
     if has_branching and detected:
         topics = " and ".join(detected[:2])
-        return True, f"You mentioned {topics}. Could you clarify which one you'd like me to focus on?"
+        return (
+            True,
+            f"You mentioned {topics}. Could you clarify which one you'd like me to focus on?",
+        )
 
     # Bare mention of both candidates without "or/vs" but with a question mark.
     # We deliberately require BOTH members of a pair AND a question mark — a
@@ -189,7 +250,10 @@ def needs_clarification(text: str) -> tuple[bool, str | None]:
 
     # Generic "what about X" with no specialist anchor → ambiguous at the hub.
     if lc.strip().startswith(("what about ", "how about ")) and "?" in lc:
-        return True, "Could you give me a bit more context about what you're trying to decide?"
+        return (
+            True,
+            "Could you give me a bit more context about what you're trying to decide?",
+        )
 
     return False, None
 
@@ -263,7 +327,10 @@ _PII_PATTERNS: list[tuple[str, str]] = [
     # email
     (re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"), "[REDACTED:email]"),
     # phone (NA-ish + intl-ish)
-    (re.compile(r"\+?\d{1,2}[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}"), "[REDACTED:phone]"),
+    (
+        re.compile(r"\+?\d{1,2}[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}"),
+        "[REDACTED:phone]",
+    ),
     # SSN
     (re.compile(r"\b\d{3}-\d{2}-\d{4}\b"), "[REDACTED:ssn]"),
     # credit card (16 digits, optional separators)
@@ -307,10 +374,18 @@ def requests_pii(text: str) -> bool:
         return False
     lc = text.lower()
     ASK = (
-        "what is your name", "what's your name", "please provide your email",
-        "send me your ssn", "your phone number", "your credit card",
-        "please share your password", "what's your ssn", "your ssn",
-        "your full name", "your birthday", "your date of birth",
+        "what is your name",
+        "what's your name",
+        "please provide your email",
+        "send me your ssn",
+        "your phone number",
+        "your credit card",
+        "please share your password",
+        "what's your ssn",
+        "your ssn",
+        "your full name",
+        "your birthday",
+        "your date of birth",
         "your address",
     )
     return any(tok in lc for tok in ASK)
@@ -319,6 +394,7 @@ def requests_pii(text: str) -> bool:
 # ---------------------------------------------------------------------------
 # 5) Loop-Break Protocol
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class LoopBreaker:
@@ -368,6 +444,7 @@ class LoopBreaker:
 # 6) Scope Restriction
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Scope:
     """A specialist's declared scope.
@@ -391,7 +468,9 @@ def scope_keywords_match(text: str, scope: Scope) -> int:
     if not text:
         return 0
     lc = text.lower()
-    return sum(1 for kw in scope.keywords if re.search(rf"\b{re.escape(kw.lower())}\b", lc))
+    return sum(
+        1 for kw in scope.keywords if re.search(rf"\b{re.escape(kw.lower())}\b", lc)
+    )
 
 
 def in_scope(text: str, scope: Scope) -> bool:
