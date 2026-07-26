@@ -20,27 +20,26 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from .errors import LoopBreakError, ScopeError
 
 __all__ = [
     "DRAFT_LABEL",
-    "is_date_question",
-    "needs_clarification",
-    "label_draft",
-    "scrub_unsupported_claims",
-    "redact_pii",
     "LoopBreaker",
     "in_scope",
+    "is_date_question",
+    "label_draft",
+    "needs_clarification",
+    "redact_pii",
     "scope_keywords_match",
+    "scrub_unsupported_claims",
 ]
 
 # ---------------------------------------------------------------------------
 # 1) Date Authority Rule
 # ---------------------------------------------------------------------------
 
-_DATE_KEYWORDS: Tuple[str, ...] = (
+_DATE_KEYWORDS: tuple[str, ...] = (
     # explicit timing words
     "date", "dates", "when", "timeline", "milestone", "milestones",
     "deadline", "deadlines", "schedule", "due", "release date",
@@ -79,7 +78,6 @@ def is_date_question(text: str) -> bool:
     if not text:
         return False
     lc = text.lower()
-    lc_preserved = text  # preserve case for Q1..Q4 tokens
 
     # Phrase-level questions that always imply asking *when*.
     DATE_PHRASES = (
@@ -133,7 +131,7 @@ def is_date_question(text: str) -> bool:
 # Each entry is a tuple of (token_a, token_b). Tokens are matched as whole
 # words (case-insensitive, word boundary) to avoid false positives from
 # substrings like "a" inside "about". Single-letter tokens are excluded.
-_AMBIGUOUS_PAIRS: Tuple[Tuple[str, str], ...] = (
+_AMBIGUOUS_PAIRS: tuple[tuple[str, str], ...] = (
     ("cost", "performance"),
     ("cost", "reliability"),
     ("cost", "throughput"),
@@ -155,7 +153,7 @@ def _word_in(text: str, word: str) -> bool:
     return re.search(rf"\b{re.escape(word.lower())}\b", text.lower()) is not None
 
 
-def needs_clarification(text: str) -> Tuple[bool, Optional[str]]:
+def needs_clarification(text: str) -> tuple[bool, str | None]:
     """Inspect ``text`` for actionable ambiguity.
 
     Returns a tuple ``(must_clarify, suggested_question)``. ``must_clarify`` is
@@ -172,7 +170,7 @@ def needs_clarification(text: str) -> Tuple[bool, Optional[str]]:
     UNCERTAINTY = (" or ", " vs ", " versus ", "difference between", "which one")
     has_branching = any(tok in lc for tok in UNCERTAINTY)
 
-    detected: List[str] = []
+    detected: list[str] = []
     for a, b in _AMBIGUOUS_PAIRS:
         if _word_in(lc, a) and _word_in(lc, b):
             detected.extend([a, b])
@@ -216,7 +214,7 @@ def label_draft(text: str, *, label: str = DRAFT_LABEL) -> str:
 
 # Phrases that indicate an agent invented evidence instead of citing a real
 # source. Detected regardless of case.
-_INVENTED_EVIDENCE_PATTERNS: Tuple[str, ...] = (
+_INVENTED_EVIDENCE_PATTERNS: tuple[str, ...] = (
     "as i recall",
     "i believe",
     "i think it happened",
@@ -234,7 +232,7 @@ _INVENTED_EVIDENCE_PATTERNS: Tuple[str, ...] = (
 )
 
 
-def scrub_unsupported_claims(text: str) -> Tuple[str, List[str]]:
+def scrub_unsupported_claims(text: str) -> tuple[str, list[str]]:
     """Replace invented-evidence phrasing with a flagged placeholder.
 
     Returns ``(scrubbed_text, flags)`` where ``flags`` is the list of flagged
@@ -244,7 +242,7 @@ def scrub_unsupported_claims(text: str) -> Tuple[str, List[str]]:
     """
     if not text:
         return text, []
-    flags: List[str] = []
+    flags: list[str] = []
     out = text
     for phrase in _INVENTED_EVIDENCE_PATTERNS:
         pattern = rf"(?i)\b{re.escape(phrase)}\b[^.\n]*[.\n]?"
@@ -261,7 +259,7 @@ def scrub_unsupported_claims(text: str) -> Tuple[str, List[str]]:
 
 # Lightweight redaction patterns. Covers the common PII categories that
 # surface in SRE/perf work without pulling a heavy NLP dep.
-_PII_PATTERNS: List[Tuple[str, str]] = [
+_PII_PATTERNS: list[tuple[str, str]] = [
     # email
     (re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"), "[REDACTED:email]"),
     # phone (NA-ish + intl-ish)
@@ -337,7 +335,7 @@ class LoopBreaker:
     """
 
     max_hops: int = 2
-    hops: List[str] = field(default_factory=list)
+    hops: list[str] = field(default_factory=list)
     armed: bool = True
 
     def __post_init__(self) -> None:
@@ -381,7 +379,7 @@ class Scope:
 
     name: str
     description: str
-    keywords: Tuple[str, ...]
+    keywords: tuple[str, ...]
 
     def __post_init__(self) -> None:
         if not self.keywords:

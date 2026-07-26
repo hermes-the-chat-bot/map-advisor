@@ -15,23 +15,23 @@ Run with --demo to see each guardrail exercised against canned queries.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import sys
-from typing import Any, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from . import __version__
 from .agents import default_orchestrator
-from .llm import LLMClient, MockLLMClient, OpenAIClient, make_client
+from .llm import LLMClient, MockLLMClient, OpenAIClient
 
-__all__ = ["main", "build_parser", "run_query", "run_demo"]
+__all__ = ["build_parser", "main", "run_demo", "run_query"]
 
 
 # ---------------------------------------------------------------------------
 # Demo canned queries — chosen to exercise every guardrail.
 # ---------------------------------------------------------------------------
 
-DEMO_QUERIES: List[str] = [
+DEMO_QUERIES: list[str] = [
     "When is the capacity review due?",                          # Date Authority
     "Should I focus on cost or reliability?",                    # Disambiguation
     "My email is cam@example.com — what's our CPU headroom?",       # PII Policy
@@ -153,7 +153,7 @@ def run_demo(args: argparse.Namespace) -> str:
     orch = default_orchestrator(client)
     orch.max_hops = args.max_hops
 
-    blocks: List[str] = ["=" * 78, "MAP ADVISOR — GUARDRAIL DEMO", "=" * 78]
+    blocks: list[str] = ["=" * 78, "MAP ADVISOR — GUARDRAIL DEMO", "=" * 78]
     for i, q in enumerate(DEMO_QUERIES, 1):
         r = orch.run(q)
         blocks.append(
@@ -167,7 +167,7 @@ def run_demo(args: argparse.Namespace) -> str:
     return "\n".join(blocks)
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -181,7 +181,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     try:
         print(run_query(args.query, args))
-    except Exception as e:  # pragma: no cover - defensive for CLI
+    except Exception as e:  # pragma: no cover - defensive for CLI  # noqa: BLE001
         print(f"error: {e}", file=sys.stderr)
         return 1
     return 0

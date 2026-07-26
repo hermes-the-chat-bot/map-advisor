@@ -24,18 +24,15 @@ those checks around the LLM calls.
 
 from __future__ import annotations
 
-import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable
 
 from .errors import (
-    DisambiguationError,
     LoopBreakError,
     RoutingError,
-    ScopeError,
 )
 from .guardrails import (
-    DRAFT_LABEL,
     LoopBreaker,
     Scope,
     in_scope,
@@ -44,21 +41,21 @@ from .guardrails import (
     needs_clarification,
     redact_pii,
     requests_pii,
-    scrub_unsupported_claims,
     scope_keywords_match,
+    scrub_unsupported_claims,
 )
-from .llm import LLMClient, LLMResponse, MockLLMClient
+from .llm import LLMClient, MockLLMClient
 
 __all__ = [
-    "AgentResult",
-    "Specialist",
-    "Orchestrator",
-    "CapacitySpecialist",
-    "CostSpecialist",
-    "ReliabilitySpecialist",
     "CAPACITY_SCOPE",
     "COST_SCOPE",
     "RELIABILITY_SCOPE",
+    "AgentResult",
+    "CapacitySpecialist",
+    "CostSpecialist",
+    "Orchestrator",
+    "ReliabilitySpecialist",
+    "Specialist",
 ]
 
 
@@ -116,9 +113,9 @@ class AgentResult:
     agent: str
     role: str
     text: str
-    route_to: Optional[str] = None
-    hops: List[str] = field(default_factory=list)
-    flags: List[str] = field(default_factory=list)
+    route_to: str | None = None
+    hops: list[str] = field(default_factory=list)
+    flags: list[str] = field(default_factory=list)
     final: bool = False
 
     def __str__(self) -> str:  # pragma: no cover - trivial
@@ -156,7 +153,7 @@ class Specialist:
         scope: Scope,
         llm: LLMClient,
         *,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
     ) -> None:
         self.scope = scope
         self.llm = llm
@@ -170,7 +167,7 @@ class Specialist:
 
     # -- public ------------------------------------------------------------
 
-    def handle(self, query: str, *, hops: Optional[List[str]] = None) -> AgentResult:
+    def handle(self, query: str, *, hops: list[str] | None = None) -> AgentResult:
         """Process ``query`` and return either a draft or a back-route.
 
         The orchestrator always calls this with the latest ``hops`` list so
@@ -272,14 +269,14 @@ class Orchestrator:
     def __init__(
         self,
         specialists: Sequence[Specialist],
-        llm: Optional[LLMClient] = None,
+        llm: LLMClient | None = None,
         *,
         max_hops: int = 2,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
     ) -> None:
         if not specialists:
             raise RoutingError("Orchestrator needs at least one specialist.")
-        self.specialists: List[Specialist] = list(specialists)
+        self.specialists: list[Specialist] = list(specialists)
         self.llm = llm or MockLLMClient()
         self.max_hops = max_hops
         self.system_prompt = system_prompt or (
@@ -288,12 +285,12 @@ class Orchestrator:
             "Never invent evidence. Never request or echo PII."
         )
         # Specialists indexed by scope name for routing back.
-        self._by_name: Dict[str, Specialist] = {s.scope.name: s for s in self.specialists}
+        self._by_name: dict[str, Specialist] = {s.scope.name: s for s in self.specialists}
 
     # ------------------------------------------------------------------
-    def _route_specialist(self, query: str) -> Optional[Specialist]:
+    def _route_specialist(self, query: str) -> Specialist | None:
         """Pick the highest-overlap specialist for ``query``."""
-        best: Optional[Specialist] = None
+        best: Specialist | None = None
         best_score = 0
         for spec in self.specialists:
             score = scope_keywords_match(query, spec.scope)
@@ -318,7 +315,7 @@ class Orchestrator:
         pii_was_redacted = cleaned_query != query
 
         breaker = LoopBreaker(max_hops=self.max_hops)
-        hops: List[str] = ["orchestrator"]
+        hops: list[str] = ["orchestrator"]
 
         # 2) Date Authority Rule — the orchestrator answers directly.
         if is_date_question(cleaned_query):
@@ -410,13 +407,13 @@ class Orchestrator:
         spec: Specialist,
         query: str,
         breaker: LoopBreaker,
-        hops: List[str],
+        hops: list[str],
     ) -> AgentResult:
         """Send to ``spec``; if it hard-routes back, try alternatives."""
         result = spec.handle(query, hops=hops)
         breaker.record(f"{spec.name}")
 
-        attempts: List[str] = [spec.name]
+        attempts: list[str] = [spec.name]
         while result.route_to == "orchestrator":
             # The specialist handed it back. Try the next-best specialist.
             next_spec = self._next_specialist(query, exclude=attempts)
@@ -444,8 +441,8 @@ class Orchestrator:
 
         return result
 
-    def _next_specialist(self, query: str, *, exclude: Sequence[str]) -> Optional[Specialist]:
-        best: Optional[Specialist] = None
+    def _next_specialist(self, query: str, *, exclude: Sequence[str]) -> Specialist | None:
+        best: Specialist | None = None
         best_score = 0
         for spec in self.specialists:
             if spec.name in exclude:
@@ -457,7 +454,7 @@ class Orchestrator:
         return best
 
     # ------------------------------------------------------------------
-    def _answer_date_question(self, query: str, breaker: LoopBreaker, hops: List[str]) -> str:
+    def _answer_date_question(self, query: str, breaker: LoopBreaker, hops: list[str]) -> str:
         """The orchestrator answers timeline questions authoritatively."""
         response = self.llm.generate(
             [{"role": "user", "content": query}],
@@ -484,7 +481,7 @@ class Orchestrator:
 # Convenience constructor used by tests and the CLI.
 # ---------------------------------------------------------------------------
 
-def default_orchestrator(llm: Optional[LLMClient] = None) -> Orchestrator:
+def default_orchestrator(llm: LLMClient | None = None) -> Orchestrator:
     """Build an orchestrator wired with all three default specialists."""
     llm = llm or MockLLMClient()
     return Orchestrator(

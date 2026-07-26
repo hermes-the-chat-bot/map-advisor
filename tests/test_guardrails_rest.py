@@ -15,10 +15,9 @@ from map_advisor.guardrails import (
     needs_clarification,
     redact_pii,
     requests_pii,
-    scrub_unsupported_claims,
     scope_keywords_match,
+    scrub_unsupported_claims,
 )
-
 
 # ---------------------------------------------------------------------------
 # Disambiguation Protocol

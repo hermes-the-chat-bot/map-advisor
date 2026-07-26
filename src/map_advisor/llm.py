@@ -22,14 +22,15 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Callable
 
 from .errors import GuardrailError
 
 __all__ = [
-    "LLMResponse",
     "LLMClient",
+    "LLMResponse",
     "MockLLMClient",
     "OpenAIClient",
     "make_client",
@@ -52,7 +53,7 @@ class LLMResponse:
 
     text: str
     raw: Any = None
-    meta: Dict[str, Any] = field(default_factory=dict)
+    meta: dict[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:  # pragma: no cover - trivial
         return self.text
@@ -69,11 +70,11 @@ class LLMClient:
         self,
         messages: Sequence[Mapping[str, str]],
         *,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
-        stop: Optional[Sequence[str]] = None,
-        metadata: Optional[Mapping[str, Any]] = None,
+        max_tokens: int | None = None,
+        stop: Sequence[str] | None = None,
+        metadata: Mapping[str, Any] | None = None,
     ) -> LLMResponse:
         raise NotImplementedError
 
@@ -101,25 +102,24 @@ class MockLLMClient(LLMClient):
 
     def __init__(
         self,
-        responses: Optional[Sequence[str]] = None,
-        patterns: Optional[Mapping[str, str]] = None,
-        default: Optional[str] = None,
+        responses: Sequence[str] | None = None,
+        patterns: Mapping[str, str] | None = None,
+        default: str | None = None,
     ) -> None:
-        self._scripted: List[str] = list(responses) if responses else []
-        self._patterns: Dict[str, str] = dict(patterns or {})
-        self._callbacks: List[Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]] = []
+        self._scripted: list[str] = list(responses) if responses else []
+        self._patterns: dict[str, str] = dict(patterns or {})
+        self._callbacks: list[Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]] = []
         self._default = default or "[mock] I have no canned response for that."
-        self._call_log: List[Dict[str, Any]] = []
+        self._call_log: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ API
 
     def respond_with(self, fn: Callable[[Sequence[Mapping[str, str]], Mapping[str, Any]], str]) -> None:
         """Register a callback consulted before patterns/scripted responses."""
         self._callbacks.append(fn)
-        return None
 
     @property
-    def call_log(self) -> List[Dict[str, Any]]:
+    def call_log(self) -> list[dict[str, Any]]:
         """Read-only log of every ``generate()`` invocation."""
         return list(self._call_log)
 
@@ -127,11 +127,11 @@ class MockLLMClient(LLMClient):
         self,
         messages: Sequence[Mapping[str, str]],
         *,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
-        stop: Optional[Sequence[str]] = None,
-        metadata: Optional[Mapping[str, Any]] = None,
+        max_tokens: int | None = None,
+        stop: Sequence[str] | None = None,
+        metadata: Mapping[str, Any] | None = None,
     ) -> LLMResponse:
         meta = dict(metadata or {})
         meta.update({
@@ -198,8 +198,8 @@ class OpenAIClient(LLMClient):
     def __init__(
         self,
         model: str = "gpt-4o-mini",
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
         client: Any = None,
     ) -> None:
         self.model = model
@@ -211,11 +211,11 @@ class OpenAIClient(LLMClient):
         self,
         messages: Sequence[Mapping[str, str]],
         *,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         temperature: float = 0.0,
-        max_tokens: Optional[int] = None,
-        stop: Optional[Sequence[str]] = None,
-        metadata: Optional[Mapping[str, Any]] = None,
+        max_tokens: int | None = None,
+        stop: Sequence[str] | None = None,
+        metadata: Mapping[str, Any] | None = None,
     ) -> LLMResponse:
         try:
             from openai import OpenAI  # type: ignore
@@ -226,12 +226,12 @@ class OpenAIClient(LLMClient):
             ) from exc
 
         client = self._client or OpenAI(api_key=self._api_key, base_url=self._base_url)
-        full_messages: List[Dict[str, str]] = []
+        full_messages: list[dict[str, str]] = []
         if system_prompt:
             full_messages.append({"role": "system", "content": system_prompt})
         full_messages.extend({"role": m["role"], "content": m["content"]} for m in messages)
 
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "model": self.model,
             "messages": full_messages,
             "temperature": temperature,

@@ -7,12 +7,12 @@ a guardrail-triggered refusal from a genuine runtime error.
 from __future__ import annotations
 
 __all__ = [
-    "MapAdvisorError",
-    "GuardrailError",
-    "RoutingError",
-    "LoopBreakError",
-    "ScopeError",
     "DisambiguationError",
+    "GuardrailError",
+    "LoopBreakError",
+    "MapAdvisorError",
+    "RoutingError",
+    "ScopeError",
 ]
 
 

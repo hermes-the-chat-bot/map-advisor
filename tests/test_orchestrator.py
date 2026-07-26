@@ -2,22 +2,18 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import pytest
 
 from map_advisor.agents import (
-    AgentResult,
     CapacitySpecialist,
     CostSpecialist,
     Orchestrator,
     ReliabilitySpecialist,
     default_orchestrator,
 )
-from map_advisor.errors import LoopBreakError, RoutingError
+from map_advisor.errors import RoutingError
 from map_advisor.guardrails import DRAFT_LABEL
 from map_advisor.llm import MockLLMClient
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -73,7 +69,7 @@ class TestDateAuthorityE2E:
         assert r.agent == "orchestrator"
         assert "date_authority_handled" in r.flags
         # The specialist LLM was never consulted — only one generate() call.
-        orch.llm.call_log  # touched
+        # orch.llm.call_log  # touched
 
     def test_specialist_hard_routes_date_back_to_orchestrator(self) -> None:
         # Send a question that matches both a date keyword AND a scope
@@ -272,7 +268,7 @@ class TestRoutingSelection:
         # Two scopes overlap on "SLO" — capacity and reliability both list it.
         # Capacity appears first in the orchestrator's specialist list.
         orch = make_orchestrator(responses=["first"])
-        spec = orch._route_specialist("Tell me about SLO burn.")  # noqa: SLF001
+        spec = orch._route_specialist("Tell me about SLO burn.")
         # Either matches SLO; first-declared (capacity) wins ties since we use
         # strictly-greater-than comparison.
         assert spec is not None
@@ -280,4 +276,4 @@ class TestRoutingSelection:
 
     def test_no_keyword_returns_none(self) -> None:
         orch = make_orchestrator()
-        assert orch._route_specialist("the weather") is None  # noqa: SLF001
+        assert orch._route_specialist("the weather") is None

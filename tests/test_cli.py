@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import io
-import json
 from contextlib import redirect_stderr, redirect_stdout
 
 import pytest
@@ -27,7 +26,7 @@ def test_build_parser_help_does_not_raise() -> None:
 
 
 def test_no_query_returns_help_and_exit_2() -> None:
-    rc, out, err = _run([])
+    rc, _out, err = _run([])
     assert rc == 2
     assert "usage:" in err.lower()
 
